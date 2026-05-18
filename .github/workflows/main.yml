@@ -17,10 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-package-lock
 
       - name: Build Electron app
         run: npm run build
@@ -29,16 +28,16 @@ jobs:
         run: choco install nsis -y
 
       - name: Build installer
+        shell: pwsh
         run: |
           & "C:\Program Files (x86)\NSIS\makensis.exe" installer\installer.nsi
           if (Test-Path "Adobe Bridge Setup.exe") {
             Move-Item "Adobe Bridge Setup.exe" "dist\Adobe Bridge Setup.exe"
           }
-        shell: pwsh
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: Adobe-Bridge-Setup
-          path: dist/Adobe Bridge Setup.exe
+          path: "dist/Adobe Bridge Setup.exe"
           retention-days: 30
