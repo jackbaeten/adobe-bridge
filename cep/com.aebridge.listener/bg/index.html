@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><title>AE Bridge BG</title></head>
+<body>
+<script>
+var CSInterface=function(){};CSInterface.prototype.evalScript=function(s,cb){typeof window.__adobe_cep__!="undefined"?window.__adobe_cep__.evalScript(s,cb||function(){}):cb&&cb('{"error":"not in CEP"}');};
+var cs=new CSInterface();
+var ws=null,PORT=61900,rtimer=null;
+var HOST_ENV=typeof window.__adobe_cep__!="undefined"?JSON.parse(window.__adobe_cep__.getHostEnvironment()):{};
+var APP_ID=HOST_ENV.appId||"AEFT";
+var APP_VER=HOST_ENV.appVersion||"0";
+var HOST_ID=APP_ID+"-"+APP_VER;
+
+function connect(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  try{ws=new WebSocket('ws://localhost:'+PORT);}catch(e){schedule();return;}
+  ws.onopen=function(){
+    ws.send(JSON.stringify({type:'join-overlord',data:{hostName:HOST_ID}}));
+    clearTimeout(rtimer);
+    console.log("AE Bridge BG connected as "+HOST_ID);
+  };
+  ws.onmessage=function(e){
+    var msg;try{msg=JSON.parse(e.data);}catch(err){return;}
+    // After Effects receives LAYERS_PUSH and builds the comp
+    if(msg.type==='action'&&msg.func==='LAYERS_PUSH'){
+      console.log("AE Bridge: building comp from "+msg.fromApp);
+      var payload=JSON.stringify(msg);
+      // Escape for evalScript
+      var escaped=payload.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'\\r');
+      cs.evalScript("buildComp('"+escaped+"')",function(result){
+        var res;try{res=JSON.parse(result);}catch(er){console.error("build error",result);return;}
+        if(res&&res.success){
+          console.log("Comp built: "+res.compName);
+          if(ws&&ws.readyState===1){
+            ws.send(JSON.stringify({type:'action',to:msg.fromId,data:{fromId:HOST_ID,fromApp:APP_ID,func:'COMP_BUILT',compName:res.compName}}));
+          }
+        } else {
+          console.error("Build failed",res);
+        }
+      });
+    }
+  };
+  ws.onerror=function(){};
+  ws.onclose=function(){schedule();};
+}
+function schedule(){clearTimeout(rtimer);rtimer=setTimeout(connect,3000);}
+connect();
+</script>
+</body>
+</html>

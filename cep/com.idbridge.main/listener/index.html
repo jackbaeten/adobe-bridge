@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><title>ID Bridge Listener</title></head>
+<body>
+<script>
+// Invisible listener - auto-connects to bridge app on InDesign launch
+var ws=null,PORT=61900,rtimer=null;
+var HOST_ID='IDSN-'+Date.now();
+
+function connect(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  try{ws=new WebSocket('ws://localhost:'+PORT);}catch(e){schedule();return;}
+  ws.onopen=function(){
+    ws.send(JSON.stringify({type:'join-overlord',data:{hostName:HOST_ID+'-UI'}}));
+    clearTimeout(rtimer);
+  };
+  ws.onclose=function(){schedule();};
+  ws.onerror=function(){};
+}
+function schedule(){clearTimeout(rtimer);rtimer=setTimeout(connect,3000);}
+connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>ID>AE Bridge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#151518;--surf:#1e1e24;--border:#2e2e38;--accent:#ff5c35;--accent2:#ff8c6b;--text:#f0f0f5;--muted:#60607a;--ok:#34d399;--warn:#fbbf24;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;overflow:hidden;user-select:none;}
+  .hdr{padding:11px 13px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .logo{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;}
+  .hdr-t{font-size:11px;font-weight:700;letter-spacing:-.01em;}
+  .hdr-s{font-size:9px;color:var(--muted);}
+  .dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+  .dot.on{background:var(--ok);box-shadow:0 0 5px var(--ok);}
+  .dot.err{background:var(--accent);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}} .pulsing{animation:pulse 1.1s ease-in-out infinite;}
+
+  .sec{padding:11px 13px 0;}
+  .lbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .selbox{background:var(--surf);border:1px solid var(--border);border-radius:7px;padding:9px 11px;min-height:52px;transition:border-color .2s;}
+  .selbox.on{border-color:rgba(255,92,53,.5);}
+  .selcnt{font-size:18px;font-weight:700;line-height:1;}
+  .selcnt.zero{font-size:11px;font-weight:400;color:var(--muted);}
+  .seltypes{margin-top:4px;font-size:9px;color:var(--muted);line-height:1.7;}
+  .pill{display:inline-block;background:var(--border);border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;color:var(--accent2);font-size:9px;}
+
+  .pushwrap{padding:11px 13px;}
+  .pushbtn{width:100%;height:40px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,transform .1s;box-shadow:0 2px 10px rgba(255,92,53,.3);letter-spacing:-.01em;}
+  .pushbtn:hover{background:#ff7055;}
+  .pushbtn:active{transform:scale(.97);}
+  .pushbtn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+  .arr{font-size:14px;transition:transform .2s;} .pushbtn:hover .arr{transform:translateX(3px);}
+
+  .sarea{padding:0 13px 10px;}
+  .stat{border-radius:6px;padding:7px 10px;font-size:10px;line-height:1.5;display:none;}
+  .stat.show{display:block;}
+  .stat.ok{background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.25);color:var(--ok);}
+  .stat.err{background:rgba(255,92,53,.09);border:1px solid rgba(255,92,53,.25);color:var(--accent2);}
+  .stat.info{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.2);color:var(--warn);}
+
+  .div{margin:2px 13px 10px;border:none;border-top:1px solid var(--border);}
+  .aes{padding:0 13px 12px;}
+  .aecard{background:var(--surf);border:1px solid var(--border);border-radius:6px;padding:7px 10px;display:flex;align-items:center;gap:8px;}
+  .aedot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+  .aedot.on{background:var(--ok);box-shadow:0 0 4px var(--ok);}
+  .aelbl{font-size:10px;color:var(--muted);}
+  .aelbl strong{color:var(--text);font-weight:500;}
+  .steps{padding:0 13px 13px;color:var(--muted);font-size:10px;line-height:1.7;}
+  .step{display:flex;gap:7px;margin-bottom:3px;align-items:flex-start;}
+  .snum{background:var(--border);border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo">ID</div>
+  <div><div class="hdr-t">AE Bridge</div><div class="hdr-s">InDesign to After Effects</div></div>
+  <div class="dot pulsing" id="dot"></div>
+</div>
+
+<div class="sec" style="padding-top:11px;">
+  <div class="lbl">Selection</div>
+  <div class="selbox" id="selbox">
+    <div class="selcnt zero" id="selcnt">Nothing selected</div>
+    <div class="seltypes" id="seltypes"></div>
+  </div>
+</div>
+
+<div class="pushwrap">
+  <button class="pushbtn" id="pushbtn" onclick="doPush()">
+    <span id="pushlbl">Push to After Effects</span>
+    <span class="arr">-&gt;</span>
+  </button>
+</div>
+
+<div class="sarea"><div class="stat" id="stat"></div></div>
+
+<hr class="div">
+
+<div class="aes">
+  <div class="aecard">
+    <div class="aedot" id="aedot"></div>
+    <div class="aelbl"><strong>After Effects</strong> <span id="aelbl">not connected</span></div>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="step"><div class="snum">1</div><div>Select items in InDesign</div></div>
+  <div class="step"><div class="snum">2</div><div>Click Push to After Effects</div></div>
+  <div class="step"><div class="snum">3</div><div>New comp appears in AE automatically</div></div>
+</div>
+
+<script>
+var CSInterface=function(){};CSInterface.prototype.evalScript=function(s,cb){typeof window.__adobe_cep__!="undefined"?window.__adobe_cep__.evalScript(s,cb||function(){}):cb&&cb('{"error":"not in CEP"}');};CSInterface.prototype.getHostEnvironment=function(){return typeof window.__adobe_cep__!="undefined"?JSON.parse(window.__adobe_cep__.getHostEnvironment()):null;};
+var cs=new CSInterface();
+var ws=null,PORT=61900,aeConn=false,bridgeConn=false,rtimer=null,ptimer=null;
+var HOST_ID='IDSN-'+Date.now();
+
+function connect(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  try{ws=new WebSocket('ws://localhost:'+PORT);}catch(e){schedule();return;}
+  ws.onopen=function(){bridgeConn=true;setDot(true);ws.send(JSON.stringify({type:'join-overlord',data:{hostName:HOST_ID}}));clearTimeout(rtimer);};
+  ws.onmessage=function(e){
+    var msg;try{msg=JSON.parse(e.data);}catch(err){return;}
+    if(msg.type==='connected'){bridgeConn=true;}
+    if(msg.type==='hosts-update'){
+      var list=msg.data&&msg.data.hostList||[];
+      aeConn=list.some(function(h){return h.hostName&&h.hostName.startsWith('AEFT');});
+      updateAE();
+    }
+    if(msg.type==='action'&&msg.func==='COMP_BUILT'){setstat('Comp created: '+msg.compName,'ok');setBtnReady();}
+    if(msg.type==='action'&&msg.func==='PUSH_ERROR'){setstat(msg.string||'Error','err');setBtnReady();}
+  };
+  ws.onerror=function(){};
+  ws.onclose=function(){bridgeConn=false;aeConn=false;setDot(false);updateAE();schedule();};
+}
+function schedule(){clearTimeout(rtimer);rtimer=setTimeout(connect,3000);}
+function setDot(on){var d=document.getElementById('dot');d.className='dot'+(on?' on':' err pulsing');}
+function updateAE(){var d=document.getElementById('aedot');var l=document.getElementById('aelbl');d.className='aedot'+(aeConn?' on':'');l.textContent=aeConn?'connected':'not connected';}
+
+function doPush(){
+  if(!bridgeConn){setstat('Bridge app not running. Start Adobe Bridge from the Start Menu.','err');return;}
+  document.getElementById('pushbtn').disabled=true;
+  document.getElementById('pushlbl').textContent='Reading selection...';
+  setstat('','');
+  cs.evalScript('collectSelection()',function(result){
+    var data;try{data=JSON.parse(result);}catch(e){setstat('Script error','err');setBtnReady();return;}
+    if(data.error){setstat(data.error,'err');setBtnReady();return;}
+    document.getElementById('pushlbl').textContent='Sending to AE...';
+    // Send to AE hosts via bridge
+    if(ws&&ws.readyState===1){
+      ws.send(JSON.stringify({type:'action',to:'ALL',data:{fromId:HOST_ID,fromApp:'IDSN',func:'LAYERS_PUSH',artboard:{width:data.docW,height:data.docH,name:data.docName},layers:data.layers,selectedCount:data.selectedCount,source:data.source}}));
+    } else {setstat('Not connected to bridge app','err');setBtnReady();}
+  });
+}
+function setBtnReady(){document.getElementById('pushbtn').disabled=false;document.getElementById('pushlbl').textContent='Push to After Effects';}
+function setstat(msg,type){var el=document.getElementById('stat');el.textContent=msg;el.className='stat'+(msg?' show '+type:'');}
+
+function pollSel(){
+  cs.evalScript('getSelectionInfo()',function(result){
+    try{
+      var info=JSON.parse(result);
+      var ce=document.getElementById('selcnt'),te=document.getElementById('seltypes'),be=document.getElementById('selbox');
+      if(info.count>0){ce.className='selcnt';ce.textContent=info.count+' item'+(info.count!==1?'s':'');be.classList.add('on');te.innerHTML=(info.types||[]).map(function(t){return'<span class="pill">'+t+'</span>';}).join('');}
+      else{ce.className='selcnt zero';ce.textContent=info.message||'Nothing selected';te.innerHTML='';be.classList.remove('on');}
+    }catch(e){}
+  });
+}
+connect();pollSel();ptimer=setInterval(pollSel,800);
+</script>
+</body>
+</html>
