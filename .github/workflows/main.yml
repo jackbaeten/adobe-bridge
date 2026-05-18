@@ -45,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Adobe-Bridge-Setup
-          path: "dist/Adobe Bridge Setup.exe"
+          path: "installer/Adobe Bridge Setup.exe"
           retention-days: 30
