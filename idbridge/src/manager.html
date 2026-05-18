@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Adobe Bridge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg: #151518; --surf: #1e1e24; --surf2: #26262e;
+    --border: #303038; --accent: #ff5c35;
+    --text: #f0f0f5; --muted: #666678; --ok: #34d399; --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+         font-size: 13px; height: 100vh; overflow: hidden; user-select: none; }
+
+  /* HEADER */
+  .hdr { padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; gap: 12px; }
+  .hdr-logo { width: 32px; height: 32px; background: var(--accent); border-radius: 7px;
+               display: flex; align-items: center; justify-content: center;
+               font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .hdr-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .hdr-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .server-pill { margin-left: auto; background: rgba(52,211,153,.12);
+                  border: 1px solid rgba(52,211,153,.25); color: var(--ok);
+                  font-size: 10px; padding: 3px 9px; border-radius: 20px; }
+
+  /* CONNECTED */
+  .sect { padding: 16px 20px 0; }
+  .sect-label { font-size: 10px; font-weight: 600; letter-spacing: .08em;
+                 text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .connected-row { display: flex; gap: 7px; flex-wrap: wrap; min-height: 28px;
+                    align-items: center; }
+  .app-chip { background: var(--surf2); border: 1px solid var(--border);
+               border-radius: 5px; padding: 3px 10px; font-size: 11px; color: var(--ok);
+               display: flex; align-items: center; gap: 5px; }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
+               box-shadow: 0 0 4px var(--ok); }
+  .no-conn { color: var(--muted); font-size: 11px; font-style: italic; }
+
+  /* BRIDGE CARDS */
+  .bridges { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surf); border: 1px solid var(--border);
+          border-radius: 10px; padding: 14px 16px;
+          display: flex; align-items: center; gap: 14px;
+          transition: border-color .2s; }
+  .card.installed { border-color: rgba(52,211,153,.3); }
+  .card-icon { width: 40px; height: 40px; border-radius: 9px;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .id-color { background: #7c3aed; }
+  .ai-color { background: #ea580c; }
+  .ps-color { background: #1d4ed8; }
+  .card-info { flex: 1; }
+  .card-name { font-size: 13px; font-weight: 600; }
+  .card-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .card-status { font-size: 10px; margin-top: 4px; }
+  .card-status.on  { color: var(--ok); }
+  .card-status.off { color: var(--muted); }
+
+  /* Toggle switch */
+  .toggle-wrap { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  .toggle { position: relative; width: 40px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--border);
+             border-radius: 22px; cursor: pointer; transition: background .2s; }
+  .slider::before { content: ''; position: absolute; width: 16px; height: 16px;
+                     background: #fff; border-radius: 50%; left: 3px; top: 3px;
+                     transition: transform .2s; }
+  input:checked + .slider { background: var(--ok); }
+  input:checked + .slider::before { transform: translateX(18px); }
+
+  /* Install button state */
+  .install-btn { background: var(--accent); color: #fff; border: none;
+                  border-radius: 6px; padding: 6px 14px; font-size: 11px;
+                  font-weight: 600; cursor: pointer; font-family: inherit;
+                  transition: background .15s; white-space: nowrap; }
+  .install-btn:hover { background: #ff7055; }
+  .install-btn.uninstall { background: var(--surf2); color: var(--muted); border: 1px solid var(--border); }
+  .install-btn.uninstall:hover { background: #2f2f3a; color: var(--text); }
+  .install-btn:disabled { opacity: .5; cursor: wait; }
+
+  /* Restart notice */
+  .notice { margin: 0 20px 10px; background: rgba(251,191,36,.08);
+             border: 1px solid rgba(251,191,36,.2); border-radius: 8px;
+             padding: 9px 13px; font-size: 11px; color: var(--warn);
+             display: none; }
+  .notice.show { display: block; }
+
+  /* Footer */
+  .footer { position: absolute; bottom: 0; left: 0; right: 0;
+             padding: 12px 20px; border-top: 1px solid var(--border);
+             display: flex; align-items: center; gap: 8px; }
+  .footer-text { font-size: 10px; color: var(--muted); }
+  .footer-btn { margin-left: auto; background: var(--surf2); border: 1px solid var(--border);
+                 color: var(--muted); font-size: 11px; padding: 4px 12px;
+                 border-radius: 5px; cursor: pointer; font-family: inherit; }
+  .footer-btn:hover { color: var(--text); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { display: inline-block; animation: spin .8s linear infinite; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">AB</div>
+  <div>
+    <div class="hdr-title">Adobe Bridge</div>
+    <div class="hdr-sub">Adobe apps to After Effects</div>
+  </div>
+  <div class="server-pill">port 61900</div>
+</div>
+
+<div class="sect" style="padding-top:16px;">
+  <div class="sect-label">Connected apps</div>
+  <div class="connected-row" id="connRow">
+    <span class="no-conn">No apps connected yet</span>
+  </div>
+</div>
+
+<div class="notice" id="restartNotice">
+  Restart InDesign / After Effects for changes to take effect.
+</div>
+
+<div class="sect" style="margin-top:14px;">
+  <div class="sect-label">Bridge connections</div>
+</div>
+
+<div class="bridges">
+  <div class="card" id="card-indesign">
+    <div class="card-icon id-color">ID</div>
+    <div class="card-info">
+      <div class="card-name">InDesign &rarr; After Effects</div>
+      <div class="card-desc">Push selected shapes, text &amp; images to AE</div>
+      <div class="card-status off" id="status-indesign">Not installed</div>
+    </div>
+    <button class="install-btn" id="btn-indesign" onclick="toggleBridge('indesign')">Install</button>
+  </div>
+
+  <div class="card" id="card-illustrator">
+    <div class="card-icon ai-color">Ai</div>
+    <div class="card-info">
+      <div class="card-name">Illustrator &rarr; After Effects</div>
+      <div class="card-desc">Push vector layers and artboards to AE</div>
+      <div class="card-status off" id="status-illustrator">Not installed</div>
+    </div>
+    <button class="install-btn" id="btn-illustrator" onclick="toggleBridge('illustrator')">Install</button>
+  </div>
+
+  <div class="card" id="card-photoshop">
+    <div class="card-icon ps-color">Ps</div>
+    <div class="card-info">
+      <div class="card-name">Photoshop &rarr; After Effects</div>
+      <div class="card-desc">Push layers and layer groups to AE</div>
+      <div class="card-status off" id="status-photoshop">Not installed</div>
+    </div>
+    <button class="install-btn" id="btn-photoshop" onclick="toggleBridge('photoshop')">Install</button>
+  </div>
+</div>
+
+<div class="footer">
+  <span class="footer-text" id="footerText">v1.0.0</span>
+  <button class="footer-btn" onclick="window.close()">Close to tray</button>
+</div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+let currentPrefs = {};
+let bridgesDef = {};
+let connected = [];
+
+function applyState({ bridges, prefs, connected: conn }) {
+  bridgesDef = bridges;
+  currentPrefs = prefs;
+  connected = conn || [];
+  renderConnected();
+  renderBridges();
+}
+
+function renderConnected() {
+  const row = document.getElementById('connRow');
+  if (connected.length === 0) {
+    row.innerHTML = '<span class="no-conn">No apps connected yet</span>';
+  } else {
+    row.innerHTML = connected.map(app => `
+      <div class="app-chip"><div class="chip-dot"></div>${app}</div>
+    `).join('');
+  }
+}
+
+function renderBridges() {
+  for (const [key, cfg] of Object.entries(bridgesDef)) {
+    const installed = (currentPrefs.bridges || {})[key]?.installed;
+    const card    = document.getElementById('card-' + key);
+    const status  = document.getElementById('status-' + key);
+    const btn     = document.getElementById('btn-' + key);
+    if (!card) continue;
+
+    if (installed) {
+      card.classList.add('installed');
+      status.textContent = 'Installed - active';
+      status.className = 'card-status on';
+      btn.textContent = 'Uninstall';
+      btn.className = 'install-btn uninstall';
+    } else {
+      card.classList.remove('installed');
+      status.textContent = 'Not installed';
+      status.className = 'card-status off';
+      btn.textContent = 'Install';
+      btn.className = 'install-btn';
+    }
+    btn.disabled = false;
+  }
+}
+
+function toggleBridge(key) {
+  const btn = document.getElementById('btn-' + key);
+  const installed = (currentPrefs.bridges || {})[key]?.installed;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinning">&#8635;</span>';
+
+  if (installed) {
+    ipcRenderer.send('uninstall-bridge', key);
+  } else {
+    ipcRenderer.send('install-bridge', key);
+  }
+}
+
+ipcRenderer.on('init', (e, state) => applyState(state));
+ipcRenderer.on('prefs-updated', (e, prefs) => {
+  currentPrefs = prefs;
+  renderBridges();
+  document.getElementById('restartNotice').classList.add('show');
+});
+ipcRenderer.on('install-result', (e, { bridgeKey, ok, uninstalled }) => {
+  const btn = document.getElementById('btn-' + bridgeKey);
+  btn.disabled = false;
+  if (!ok) {
+    btn.textContent = 'Error';
+    setTimeout(() => renderBridges(), 2000);
+  }
+});
+ipcRenderer.on('state', (e, state) => applyState(state));
+
+// Poll for connected apps every 2s
+setInterval(() => ipcRenderer.send('get-state'), 2000);
+</script>
+</body>
+</html>

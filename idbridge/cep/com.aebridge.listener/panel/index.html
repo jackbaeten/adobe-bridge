@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>AE Bridge</title>
+<style>
+  :root{--bg:#151518;--surf:#1e1e24;--border:#2e2e38;--accent:#1d4ed8;--text:#f0f0f5;--muted:#60607a;--ok:#34d399;--warn:#fbbf24;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;overflow:hidden;user-select:none;}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  .hdr{padding:11px 13px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .logo{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;}
+  .hdr-t{font-size:11px;font-weight:700;} .hdr-s{font-size:9px;color:var(--muted);}
+  .dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+  .dot.on{background:var(--ok);box-shadow:0 0 5px var(--ok);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}} .pulsing{animation:pulse 1.1s ease-in-out infinite;}
+  .state{padding:18px 13px;text-align:center;}
+  .state-icon{font-size:28px;margin-bottom:8px;}
+  .state-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+  .state-sub{font-size:10px;color:var(--muted);line-height:1.6;}
+  .prog{padding:0 13px 12px;display:none;}
+  .prog.show{display:block;}
+  .bar-wrap{background:var(--surf);border:1px solid var(--border);border-radius:4px;overflow:hidden;height:5px;}
+  .bar{height:100%;background:var(--accent);width:0%;}
+  @keyframes ind{0%{left:-40%;width:40%;}100%{left:100%;width:40%;}}
+  .bar.run{position:relative;width:40%;animation:ind 1.1s linear infinite;}
+  .log-sec{padding:0 13px 13px;}
+  .lbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .logbox{background:var(--surf);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:9.5px;font-family:monospace;color:var(--muted);line-height:1.7;min-height:70px;max-height:110px;overflow-y:auto;}
+  .ll{display:flex;gap:5px;} .ll.ok .lm{color:var(--ok);} .ll.err .lm{color:#ff8c6b;} .ll.info .lm{color:var(--warn);}
+  .lt{color:var(--muted);flex-shrink:0;} .lm{word-break:break-word;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo">Ae</div>
+  <div><div class="hdr-t">AE Bridge</div><div class="hdr-s">Receiving from Adobe apps</div></div>
+  <div class="dot pulsing" id="dot"></div>
+</div>
+<div class="state" id="stateBox">
+  <div class="state-icon" id="stIcon">&#9201;</div>
+  <div class="state-title" id="stTitle">Waiting for push...</div>
+  <div class="state-sub" id="stSub">Select items in InDesign<br>and click Push to After Effects.</div>
+</div>
+<div class="prog" id="prog"><div class="bar-wrap"><div class="bar run" id="bar"></div></div></div>
+<div class="log-sec"><div class="lbl">Activity</div><div class="logbox" id="logbox"></div></div>
+<script>
+var CSInterface=function(){};CSInterface.prototype.evalScript=function(s,cb){typeof window.__adobe_cep__!="undefined"?window.__adobe_cep__.evalScript(s,cb||function(){}):cb&&cb('{"error":"not in CEP"}');};
+var cs=new CSInterface();
+var ws=null,PORT=61900,rtimer=null,building=false;
+var HOST_ENV=typeof window.__adobe_cep__!="undefined"?JSON.parse(window.__adobe_cep__.getHostEnvironment()):{};
+var APP_ID=HOST_ENV.appId||"AEFT";
+var HOST_ID=APP_ID+"-panel-"+Date.now();
+
+function connect(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  try{ws=new WebSocket('ws://localhost:'+PORT);}catch(e){schedule();return;}
+  ws.onopen=function(){setDot(true);ws.send(JSON.stringify({type:'join-overlord',data:{hostName:HOST_ID}}));clearTimeout(rtimer);addLog('Connected to bridge app','ok');};
+  ws.onmessage=function(e){var msg;try{msg=JSON.parse(e.data);}catch(err){return;}
+    if(msg.type==='action'&&msg.func==='COMP_BUILT'){setState('done',msg.compName);addLog('Built: '+msg.compName,'ok');building=false;showProg(false);setTimeout(function(){setState('wait');},4000);}
+    if(msg.type==='hosts-update'){var list=msg.data&&msg.data.hostList||[];addLog(list.length+' host(s) connected','info');}
+  };
+  ws.onerror=function(){};
+  ws.onclose=function(){setDot(false);addLog('Disconnected','err');schedule();};
+}
+function schedule(){clearTimeout(rtimer);rtimer=setTimeout(connect,3000);}
+function setDot(on){var d=document.getElementById('dot');d.className='dot'+(on?' on':' pulsing');}
+function setState(s,name){
+  var i=document.getElementById('stIcon'),t=document.getElementById('stTitle'),b=document.getElementById('stSub');
+  if(s==='wait'){i.innerHTML='&#9201;';t.textContent='Waiting for push...';b.innerHTML='Select items in InDesign<br>and click Push to After Effects.';t.style.color='';}
+  else if(s==='building'){i.innerHTML='&#9881;';t.textContent='Building comp...';b.innerHTML='Creating layers in After Effects.';t.style.color='';}
+  else if(s==='done'){i.innerHTML='&#10003;';t.textContent='Comp created!';b.textContent=name||'';t.style.color='var(--ok)';}
+}
+function showProg(s){document.getElementById('prog').className='prog'+(s?' show':'');}
+function addLog(msg,type){
+  var box=document.getElementById('logbox'),now=new Date();
+  var t=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2)+':'+('0'+now.getSeconds()).slice(-2);
+  var d=document.createElement('div');d.className='ll '+(type||'');
+  d.innerHTML='<span class="lt">'+t+'</span><span class="lm">'+msg+'</span>';
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+connect();addLog('AE Bridge panel started','info');
+</script>
+</body>
+</html>

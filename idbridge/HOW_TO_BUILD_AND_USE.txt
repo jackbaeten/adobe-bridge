@@ -1,0 +1,93 @@
+====================================================
+  Adobe Bridge  |  v1.0
+  How to Build & Install
+====================================================
+
+STEP 1 - BUILD THE APP (one time)
+------------------------------------
+Double-click BUILD.bat
+
+  a) If Node.js is missing -> it opens nodejs.org for you.
+     Install Node.js LTS, then run BUILD.bat again.
+
+  b) First run downloads Electron (~80MB). Takes 5-10 min.
+     After that it's fast.
+
+  c) If NSIS is missing -> it opens the download page.
+     NSIS is free. Install it (default location), run BUILD.bat again.
+     NSIS builds the clean Windows installer (.exe).
+
+
+STEP 2 - RUN THE INSTALLER
+-----------------------------
+Open the dist\ folder and double-click:
+  "Adobe Bridge Setup.exe"
+
+The installer:
+  - Looks like a proper Windows installer (clean, modern)
+  - Installs the app to Program Files
+  - Sets up Windows startup (runs on login like Overlord)
+  - Sets Adobe CEP registry keys
+  - Creates Start Menu shortcuts
+
+
+STEP 3 - INSTALL BRIDGES IN THE APP
+--------------------------------------
+After install, Adobe Bridge starts automatically.
+The Bridge Manager window opens.
+
+Click Install next to:
+  - InDesign -> After Effects
+  - Illustrator -> After Effects  (coming soon)
+  - Photoshop -> After Effects    (coming soon)
+
+Then restart InDesign and After Effects.
+
+
+STEP 4 - USE IT
+-----------------
+InDesign:   Window > Extensions > ID>AE Bridge
+After Effects: Window > Extensions > AE Bridge
+
+Select items in InDesign -> Click Push to After Effects
+A new comp appears instantly. No manual steps in AE.
+
+
+WHAT TRANSFERS
+---------------
+  Text frames     -> Text layers (font, size, color, leading, tracking, alignment)
+  Rectangles      -> Shape layers (fill, stroke, corner radius)
+  Ovals           -> Ellipse shape layers
+  Polygons        -> Polygon shape layers
+  Placed images   -> Footage layers scaled to fit
+  Layer names     -> Matched in AE
+  Layer visibility-> Matched in AE
+  Opacity         -> Per item
+  Rotation        -> Per item
+
+
+TROUBLESHOOTING
+---------------
+Panel not in Window > Extensions?
+  -> Restart InDesign/AE fully after installing a bridge
+  -> Check: %APPDATA%\Adobe\CEP\extensions\com.idbridge.main\
+
+Orange dot in panel (not green)?
+  -> Adobe Bridge tray app is not running
+  -> Start it from: Start Menu > Adobe Bridge
+
+Comp doesn't build automatically?
+  -> Open the AE Bridge panel in After Effects
+     Window > Extensions > AE Bridge
+
+
+ADDING ILLUSTRATOR / PHOTOSHOP BRIDGES
+-----------------------------------------
+See HOW_TO_BUILD_AND_USE.txt section on adding bridges.
+The Ai and Ps bridges work identically to InDesign -
+just change host ID to ILST (Illustrator) or PHXS (Photoshop).
+
+====================================================
+  WebSocket port: 61900
+  Log: %TEMP%\adobe_bridge.log
+====================================================
