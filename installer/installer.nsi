@@ -3,6 +3,9 @@
 ; ============================================================
 
 Unicode True
+!ifndef UNPACKED_DIR
+  !define UNPACKED_DIR "dist\win-unpacked"
+!endif
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
@@ -51,7 +54,7 @@ VIAddVersionKey "LegalCopyright"  "2026 ${APP_NAME}"
 Section
     SetOutPath "$INSTDIR"
     SetOverwrite on
-    File /r "dist\win-unpacked\*.*"
+    File /r "${UNPACKED_DIR}\*.*"
 
     WriteRegStr   HKCU "${UNINSTALL_KEY}" "DisplayName"     "${APP_NAME}"
     WriteRegStr   HKCU "${UNINSTALL_KEY}" "DisplayVersion"  "${APP_VERSION}"
