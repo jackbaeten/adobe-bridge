@@ -136,17 +136,19 @@ function startWS() {
         return;
       }
 
-      // Route action messages
+      // Route action messages - forward complete payload as-is
       if (msg.type === 'action') {
         const { to, data } = msg;
+        // Serialize once to preserve full nested structure (layers, items arrays)
+        const forwarded = JSON.stringify({ type: 'action', ...(data || {}) });
         if (to === 'ALL') {
           for (const [name, client] of Object.entries(hosts)) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
-              send(client, { type: 'action', ...data });
+              try { client.send(forwarded); } catch(e) { log('Forward error: ' + e.message); }
             }
           }
-        } else if (to && hosts[to]) {
-          send(hosts[to], { type: 'action', ...data });
+        } else if (to && hosts[to] && hosts[to].readyState === WebSocket.OPEN) {
+          try { hosts[to].send(forwarded); } catch(e) { log('Forward error: ' + e.message); }
         }
         return;
       }
