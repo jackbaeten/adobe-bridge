@@ -27,7 +27,8 @@
       "assets/**/*"
     ],
     "extraResources": [
-      { "from": "cep", "to": "cep" }
+      { "from": "cep", "to": "cep" },
+      { "from": "figma-plugin", "to": "figma-plugin" }
     ],
     "win": {
       "target": [
