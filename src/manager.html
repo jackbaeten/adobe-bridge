@@ -2,251 +2,242 @@
 <html>
 <head>
 <meta charset="UTF-8"/>
-<title>Adobe Bridge</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    --bg: #151518; --surf: #1e1e24; --surf2: #26262e;
-    --border: #303038; --accent: #ff5c35;
-    --text: #f0f0f5; --muted: #666678; --ok: #34d399; --warn: #fbbf24;
+    --bg:      #1A1A22;
+    --surface: #22222E;
+    --border:  #2E2E3E;
+    --text:    #D0D0E0;
+    --muted:   #60607A;
+    --ok:      #4ADE80;
+    --accent:  #7C6CE0;
+    --accent2: #9C70E0;
+    --id-c:    #EF3E7D;
+    --figma-c: #A259FF;
+    --ai-c:    #FF7C00;
+    --ps-c:    #31A8FF;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
-         font-size: 13px; height: 100vh; overflow: hidden; user-select: none; }
-
-  /* HEADER */
-  .hdr { padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
-          display: flex; align-items: center; gap: 12px; }
-  .hdr-logo { width: 32px; height: 32px; background: var(--accent); border-radius: 7px;
-               display: flex; align-items: center; justify-content: center;
-               font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
-  .hdr-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
-  .hdr-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
-  .server-pill { margin-left: auto; background: rgba(52,211,153,.12);
-                  border: 1px solid rgba(52,211,153,.25); color: var(--ok);
-                  font-size: 10px; padding: 3px 9px; border-radius: 20px; }
-
-  /* CONNECTED */
-  .sect { padding: 16px 20px 0; }
-  .sect-label { font-size: 10px; font-weight: 600; letter-spacing: .08em;
-                 text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  .connected-row { display: flex; gap: 7px; flex-wrap: wrap; min-height: 28px;
-                    align-items: center; }
-  .app-chip { background: var(--surf2); border: 1px solid var(--border);
-               border-radius: 5px; padding: 3px 10px; font-size: 11px; color: var(--ok);
-               display: flex; align-items: center; gap: 5px; }
-  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
-               box-shadow: 0 0 4px var(--ok); }
-  .no-conn { color: var(--muted); font-size: 11px; font-style: italic; }
-
-  /* BRIDGE CARDS */
-  .bridges { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; }
-  .card { background: var(--surf); border: 1px solid var(--border);
-          border-radius: 10px; padding: 14px 16px;
-          display: flex; align-items: center; gap: 14px;
-          transition: border-color .2s; }
-  .card.installed { border-color: rgba(52,211,153,.3); }
-  .card-icon { width: 40px; height: 40px; border-radius: 9px;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
-  .id-color { background: #7c3aed; }
-  .ai-color { background: #ea580c; }
-  .ps-color { background: #1d4ed8; }
-  .card-info { flex: 1; }
-  .card-name { font-size: 13px; font-weight: 600; }
-  .card-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-  .card-status { font-size: 10px; margin-top: 4px; }
-  .card-status.on  { color: var(--ok); }
-  .card-status.off { color: var(--muted); }
-
-  /* Toggle switch */
-  .toggle-wrap { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
-  .toggle { position: relative; width: 40px; height: 22px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; inset: 0; background: var(--border);
-             border-radius: 22px; cursor: pointer; transition: background .2s; }
-  .slider::before { content: ''; position: absolute; width: 16px; height: 16px;
-                     background: #fff; border-radius: 50%; left: 3px; top: 3px;
-                     transition: transform .2s; }
-  input:checked + .slider { background: var(--ok); }
-  input:checked + .slider::before { transform: translateX(18px); }
-
-  /* Install button state */
-  .install-btn { background: var(--accent); color: #fff; border: none;
-                  border-radius: 6px; padding: 6px 14px; font-size: 11px;
-                  font-weight: 600; cursor: pointer; font-family: inherit;
-                  transition: background .15s; white-space: nowrap; }
-  .install-btn:hover { background: #ff7055; }
-  .install-btn.uninstall { background: var(--surf2); color: var(--muted); border: 1px solid var(--border); }
-  .install-btn.uninstall:hover { background: #2f2f3a; color: var(--text); }
-  .install-btn:disabled { opacity: .5; cursor: wait; }
-
-  /* Restart notice */
-  .notice { margin: 0 20px 10px; background: rgba(251,191,36,.08);
-             border: 1px solid rgba(251,191,36,.2); border-radius: 8px;
-             padding: 9px 13px; font-size: 11px; color: var(--warn);
-             display: none; }
-  .notice.show { display: block; }
-
-  /* Footer */
-  .footer { position: absolute; bottom: 0; left: 0; right: 0;
-             padding: 12px 20px; border-top: 1px solid var(--border);
-             display: flex; align-items: center; gap: 8px; }
-  .footer-text { font-size: 10px; color: var(--muted); }
-  .footer-btn { margin-left: auto; background: var(--surf2); border: 1px solid var(--border);
-                 color: var(--muted); font-size: 11px; padding: 4px 12px;
-                 border-radius: 5px; cursor: pointer; font-family: inherit; }
-  .footer-btn:hover { color: var(--text); }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinning { display: inline-block; animation: spin .8s linear infinite; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--text);
+    height: 640px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .logo-name { font-size: 15px; font-weight: 700; color: #E8E8F8; }
+  .version { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .conn-badge { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  .conn-dot.on { background: var(--ok); box-shadow: 0 0 5px var(--ok); }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px 20px 8px; }
+  .scroll::-webkit-scrollbar { width: 4px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; transition: border-color .15s; }
+  .card.installed { border-color: #3E3E6A; }
+  .card.coming-soon { opacity: .5; }
+  .card-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; }
+  .app-badge { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .app-badge.id     { background: #3A0A1A; color: var(--id-c); }
+  .app-badge.figma  { background: #220A3A; color: var(--figma-c); }
+  .app-badge.ai     { background: #2A1400; color: var(--ai-c); }
+  .app-badge.ps     { background: #001A2A; color: var(--ps-c); }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name { font-size: 13px; font-weight: 600; color: #E0E0F0; }
+  .card-desc { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .install-btn { padding: 6px 14px; border-radius: 6px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: opacity .15s; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .install-btn:hover { opacity: .8; }
+  .install-btn:disabled { opacity: .35; cursor: default; }
+  .install-btn.uninstall { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .install-btn.uninstall:hover { border-color: #7878A0; color: var(--text); opacity: 1; }
+  .figma-steps { border-top: 1px solid var(--border); padding: 12px 14px; background: #0F0F18; display: none; }
+  .figma-steps.visible { display: block; }
+  .steps-title { font-size: 11px; font-weight: 600; color: #9090C0; margin-bottom: 8px; }
+  .step { display: flex; gap: 8px; margin-bottom: 7px; font-size: 11px; line-height: 1.5; color: var(--muted); align-items: flex-start; }
+  .step-num { width: 16px; height: 16px; border-radius: 50%; background: var(--border); font-size: 9px; font-weight: 700; color: #9090C0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step code { background: var(--border); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: monospace; color: #C0C0E0; }
+  .open-folder-btn { margin-top: 8px; padding: 5px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--accent2); font-size: 11px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background .12s; }
+  .open-folder-btn:hover { background: var(--border); }
+  .footer { padding: 10px 20px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .status-text { font-size: 10px; color: var(--muted); }
+  .quit-btn { font-size: 11px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+  .quit-btn:hover { color: var(--text); background: var(--border); }
+  .tag-cs { font-size: 10px; color: var(--muted); background: var(--border); border-radius: 4px; padding: 2px 7px; }
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div class="hdr-logo">AB</div>
-  <div>
-    <div class="hdr-title">Adobe Bridge</div>
-    <div class="hdr-sub">Adobe apps to After Effects</div>
+<div class="header">
+  <div class="header-row">
+    <div class="logo">
+      <div class="logo-icon">&#8651;</div>
+      <div>
+        <div class="logo-name">Adobe Bridge</div>
+        <div class="version">v1.0.0 &middot; port 61900</div>
+      </div>
+    </div>
+    <div class="conn-badge">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connLabel">No apps connected</span>
+    </div>
   </div>
-  <div class="server-pill">port 61900</div>
 </div>
 
-<div class="sect" style="padding-top:16px;">
-  <div class="sect-label">Connected apps</div>
-  <div class="connected-row" id="connRow">
-    <span class="no-conn">No apps connected yet</span>
-  </div>
-</div>
+<div class="scroll">
+  <div class="section-label">Connections</div>
 
-<div class="notice" id="restartNotice">
-  Restart InDesign / After Effects for changes to take effect.
-</div>
-
-<div class="sect" style="margin-top:14px;">
-  <div class="sect-label">Bridge connections</div>
-</div>
-
-<div class="bridges">
   <div class="card" id="card-indesign">
-    <div class="card-icon id-color">ID</div>
-    <div class="card-info">
-      <div class="card-name">InDesign &rarr; After Effects</div>
-      <div class="card-desc">Push selected shapes, text &amp; images to AE</div>
-      <div class="card-status off" id="status-indesign">Not installed</div>
+    <div class="card-header">
+      <div class="app-badge id">Id</div>
+      <div class="card-info">
+        <div class="card-name">InDesign &rarr; After Effects</div>
+        <div class="card-desc">Push frames and layers from InDesign to AE comps.</div>
+      </div>
+      <button class="install-btn" id="btn-indesign" onclick="toggleBridge('indesign')">Install</button>
     </div>
-    <button class="install-btn" id="btn-indesign" onclick="toggleBridge('indesign')">Install</button>
   </div>
 
-  <div class="card" id="card-illustrator">
-    <div class="card-icon ai-color">Ai</div>
-    <div class="card-info">
-      <div class="card-name">Illustrator &rarr; After Effects</div>
-      <div class="card-desc">Push vector layers and artboards to AE</div>
-      <div class="card-status off" id="status-illustrator">Not installed</div>
+  <div class="card" id="card-figma">
+    <div class="card-header">
+      <div class="app-badge figma">F</div>
+      <div class="card-info">
+        <div class="card-name">Figma &rarr; After Effects</div>
+        <div class="card-desc">Push selected Figma layers directly to AE.</div>
+      </div>
+      <button class="install-btn" id="btn-figma" onclick="toggleBridge('figma')">Install</button>
     </div>
-    <button class="install-btn" id="btn-illustrator" onclick="toggleBridge('illustrator')">Install</button>
+    <div class="figma-steps" id="figma-steps">
+      <div class="steps-title">How to load the plugin in Figma</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>In Figma, open the menu &rarr; <strong>Plugins</strong> &rarr; <strong>Development</strong> &rarr; <strong>Import plugin from manifest&hellip;</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>Browse to the plugin folder and select <code>manifest.json</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>Run it from <strong>Plugins</strong> &rarr; <strong>Development</strong> &rarr; <strong>Adobe Bridge</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>Select layers in Figma and click <strong>Push to After Effects</strong></div>
+      </div>
+      <button class="open-folder-btn" onclick="openPluginFolder()">Open plugin folder</button>
+    </div>
   </div>
 
-  <div class="card" id="card-photoshop">
-    <div class="card-icon ps-color">Ps</div>
-    <div class="card-info">
-      <div class="card-name">Photoshop &rarr; After Effects</div>
-      <div class="card-desc">Push layers and layer groups to AE</div>
-      <div class="card-status off" id="status-photoshop">Not installed</div>
+  <div class="card coming-soon">
+    <div class="card-header">
+      <div class="app-badge ai">Ai</div>
+      <div class="card-info">
+        <div class="card-name">Illustrator &rarr; After Effects</div>
+        <div class="card-desc">Push Illustrator artboards to AE comps.</div>
+      </div>
+      <span class="tag-cs">Coming soon</span>
     </div>
-    <button class="install-btn" id="btn-photoshop" onclick="toggleBridge('photoshop')">Install</button>
+  </div>
+
+  <div class="card coming-soon">
+    <div class="card-header">
+      <div class="app-badge ps">Ps</div>
+      <div class="card-info">
+        <div class="card-name">Photoshop &rarr; After Effects</div>
+        <div class="card-desc">Push Photoshop layers to AE comps.</div>
+      </div>
+      <span class="tag-cs">Coming soon</span>
+    </div>
   </div>
 </div>
 
 <div class="footer">
-  <span class="footer-text" id="footerText">v1.0.0</span>
-  <button class="footer-btn" onclick="window.close()">Close to tray</button>
+  <span class="status-text" id="statusText">Waiting for connections&hellip;</span>
+  <button class="quit-btn" onclick="quit()">Quit</button>
 </div>
 
 <script>
 const { ipcRenderer } = require('electron');
+var state = { bridges: {}, prefs: {}, connected: [] };
 
-let currentPrefs = {};
-let bridgesDef = {};
-let connected = [];
+ipcRenderer.on('init', (e, data) => { state = data; render(); });
+ipcRenderer.on('prefs-updated', (e, prefs) => { state.prefs = prefs; render(); });
 
-function applyState({ bridges, prefs, connected: conn }) {
-  bridgesDef = bridges;
-  currentPrefs = prefs;
-  connected = conn || [];
-  renderConnected();
-  renderBridges();
-}
-
-function renderConnected() {
-  const row = document.getElementById('connRow');
-  if (connected.length === 0) {
-    row.innerHTML = '<span class="no-conn">No apps connected yet</span>';
+function render() {
+  const connected = state.connected || [];
+  const dot   = document.getElementById('connDot');
+  const label = document.getElementById('connLabel');
+  if (connected.length > 0) {
+    dot.className = 'conn-dot on';
+    label.textContent = connected.join(', ');
   } else {
-    row.innerHTML = connected.map(app => `
-      <div class="app-chip"><div class="chip-dot"></div>${app}</div>
-    `).join('');
+    dot.className = 'conn-dot';
+    label.textContent = 'No apps connected';
   }
+  document.getElementById('statusText').textContent =
+    connected.length > 0 ? connected.length + ' app' + (connected.length > 1 ? 's' : '') + ' connected' : 'Waiting for connections…';
+
+  for (const key of ['indesign', 'figma']) {
+    const installed = (state.prefs.bridges || {})[key]?.installed;
+    updateCard(key, installed);
+  }
+
+  const figmaInstalled = (state.prefs.bridges || {}).figma?.installed;
+  const stepsEl = document.getElementById('figma-steps');
+  if (stepsEl) stepsEl.className = 'figma-steps' + (figmaInstalled ? ' visible' : '');
 }
 
-function renderBridges() {
-  for (const [key, cfg] of Object.entries(bridgesDef)) {
-    const installed = (currentPrefs.bridges || {})[key]?.installed;
-    const card    = document.getElementById('card-' + key);
-    const status  = document.getElementById('status-' + key);
-    const btn     = document.getElementById('btn-' + key);
-    if (!card) continue;
-
-    if (installed) {
-      card.classList.add('installed');
-      status.textContent = 'Installed - active';
-      status.className = 'card-status on';
-      btn.textContent = 'Uninstall';
-      btn.className = 'install-btn uninstall';
-    } else {
-      card.classList.remove('installed');
-      status.textContent = 'Not installed';
-      status.className = 'card-status off';
-      btn.textContent = 'Install';
-      btn.className = 'install-btn';
-    }
-    btn.disabled = false;
+function updateCard(key, installed) {
+  const card = document.getElementById('card-' + key);
+  const btn  = document.getElementById('btn-' + key);
+  if (!card || !btn) return;
+  if (installed) {
+    card.classList.add('installed');
+    btn.textContent = 'Uninstall';
+    btn.className = 'install-btn uninstall';
+  } else {
+    card.classList.remove('installed');
+    btn.textContent = 'Install';
+    btn.className = 'install-btn';
   }
 }
 
 function toggleBridge(key) {
+  const installed = (state.prefs.bridges || {})[key]?.installed;
   const btn = document.getElementById('btn-' + key);
-  const installed = (currentPrefs.bridges || {})[key]?.installed;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinning">&#8635;</span>';
-
-  if (installed) {
-    ipcRenderer.send('uninstall-bridge', key);
-  } else {
-    ipcRenderer.send('install-bridge', key);
-  }
+  btn.textContent = installed ? 'Removing…' : 'Installing…';
+  ipcRenderer.send(installed ? 'uninstall-bridge' : 'install-bridge', key);
 }
 
-ipcRenderer.on('init', (e, state) => applyState(state));
-ipcRenderer.on('prefs-updated', (e, prefs) => {
-  currentPrefs = prefs;
-  renderBridges();
-  document.getElementById('restartNotice').classList.add('show');
-});
-ipcRenderer.on('install-result', (e, { bridgeKey, ok, uninstalled }) => {
-  const btn = document.getElementById('btn-' + bridgeKey);
-  btn.disabled = false;
-  if (!ok) {
-    btn.textContent = 'Error';
-    setTimeout(() => renderBridges(), 2000);
+ipcRenderer.on('install-result', (e, result) => {
+  const btn = document.getElementById('btn-' + result.bridgeKey);
+  if (btn) btn.disabled = false;
+  if (!result.ok && !result.uninstalled) {
+    if (btn) btn.textContent = 'Install';
+    alert('Installation failed. Check that Adobe CEP extensions folder is accessible.');
   }
 });
-ipcRenderer.on('state', (e, state) => applyState(state));
 
-// Poll for connected apps every 2s
-setInterval(() => ipcRenderer.send('get-state'), 2000);
+function openPluginFolder() { ipcRenderer.send('open-figma-plugin-dir'); }
+
+function quit() {
+  try { require('@electron/remote').app.quit(); } catch(e) {
+    try { require('electron').remote.app.quit(); } catch(e2) { window.close(); }
+  }
+}
 </script>
 </body>
 </html>
