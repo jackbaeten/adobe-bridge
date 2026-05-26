@@ -1,3 +1,4 @@
+// v1.0.1
 'use strict';
 
 const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } = require('electron');
