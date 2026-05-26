@@ -2,39 +2,39 @@ name: Build Windows Installer
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+      branches: [ main ]
+        workflow_dispatch:
 
-permissions:
-  contents: read
+        permissions:
+          contents: write
 
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm install --no-package-lock
-      - run: npm run build
-      - name: Show dist contents
-        shell: pwsh
-        run: Get-ChildItem -Path dist -Recurse -Depth 2 | Select-Object FullName
-      - name: Install NSIS
-        run: choco install nsis -y
-      - name: Build installer
-        shell: pwsh
-        run: |
-          $unpackedDir = Get-ChildItem -Path dist -Directory | Where-Object { $_.Name -like "*unpacked*" -or $_.Name -like "*win*" } | Select-Object -First 1
-          Write-Host "Using: $($unpackedDir.FullName)"
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /DUNPACKED_DIR="$($unpackedDir.FullName)" installer\installer.nsi
-          if (Test-Path "Adobe Bridge Setup.exe") {
-            Move-Item "Adobe Bridge Setup.exe" "dist\Adobe Bridge Setup.exe"
-          }
-      - name: Upload installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: Adobe-Bridge-Setup
-          path: dist/Adobe Bridge Setup.exe
-          retention-days: 30
+          jobs:
+            build:
+                runs-on: windows-latest
+                    steps:
+                          - name: Checkout code
+                                  uses: actions/checkout@v4
+
+                                        - name: Setup Node.js
+                                                uses: actions/setup-node@v4
+                                                        with:
+                                                                  node-version: '20'
+
+                                                                        - name: Install dependencies
+                                                                                run: npm install --no-package-lock
+
+                                                                                      - name: Build installer with electron-builder
+                                                                                              run: npm run build
+                                                                                                      env:
+                                                                                                                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                                                                                                                
+                                                                                                                      - name: List dist folder
+                                                                                                                              shell: pwsh
+                                                                                                                                      run: Get-ChildItem -Path dist -Recurse | Select-Object FullName
+                                                                                                                                      
+                                                                                                                                            - name: Upload installer
+                                                                                                                                                    uses: actions/upload-artifact@v4
+                                                                                                                                                            with:
+                                                                                                                                                                      name: Adobe-Bridge-Setup
+                                                                                                                                                                                path: dist/*.exe
+                                                                                                                                                                                          retention-days: 90
